@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking de Competidores</title>
+    <!-- Inclui o Tailwind CSS do CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configuração do Tailwind para a fonte Inter -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-inter bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+    <div class="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6 sm:p-8 lg:p-10">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-indigo-700">Ranking de Competidores</h1>
+
+        <div id="ranking-container">
+            <p class="text-center p-8 text-lg text-gray-700">Carregando dados do ranking...</p>
+        </div>
+
+        <div id="error-message" class="text-center p-8 text-lg text-red-600 hidden">
+            <p>Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.</p>
+        </div>
+    </div>
+
+    <!-- O script do Supabase agora é importado como um módulo abaixo -->
+    <script type="module">
+        // Importa createClient diretamente da biblioteca Supabase como um módulo ES
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/+esm';
+
+        // Garante que o script só seja executado após o DOM estar completamente carregado
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Configurações do Supabase
+            const SUPABASE_URL = "https://xwejzglvqsiydycvivys.supabase.co";
+            // AVISO DE SEGURANÇA CRÍTICO:
+            // A chave fornecida é uma 'service_role' key, que NÃO DEVE ser exposta no frontend.
+            // Ela tem acesso total ao seu banco de dados. Para uso em produção, use sua
+            // CHAVE PÚBLICA (anon) do Supabase. A chave pública pode ser encontrada no seu
+            // painel Supabase em "Settings" -> "API".
+            const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3ZWp6Z2x2cXNpeWR5Y3ZpdnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyNDgzOTQsImV4cCI6MjA1NzgyNDM5NH0.32ClzsWEgc_XdqXD4d8i7_AO4SOIjKjzQCPb_SjJBoU"; // Chave fornecida pelo usuário (AVISO DE SEGURANÇA)
+
+            // Inicializa o cliente Supabase
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+            async function fetchRanking() {
+                const rankingContainer = document.getElementById('ranking-container');
+                const errorMessage = document.getElementById('error-message');
+
+                rankingContainer.innerHTML = '<p class="text-center p-8 text-lg text-gray-700">Carregando dados do ranking...</p>';
+                errorMessage.classList.add('hidden');
+
+                try {
+                    const { data, error } = await supabase
+                        .from('competitors')
+                        .select('room_id, title, host_id, position')
+                        .order('position', { ascending: true });
+
+                    if (error) {
+                        console.error('Erro ao buscar dados:', error.message);
+                        rankingContainer.classList.add('hidden');
+                        errorMessage.classList.remove('hidden');
+                        return;
+                    }
+
+                    if (!data || data.length === 0) {
+                        rankingContainer.innerHTML = '<p class="text-center p-8 text-lg text-gray-700">Nenhum dado de ranking encontrado.</p>';
+                        return;
+                    }
+
+                    // Cria a tabela HTML
+                    let tableHtml = `
+                        <div class="overflow-x-auto rounded-xl shadow-md">
+                            <table class="w-full text-left border-separate border-spacing-0 rounded-xl overflow-hidden">
+                                <thead class="bg-indigo-600 text-white text-sm uppercase">
+                                    <tr>
+                                        <th class="py-3 px-4 rounded-tl-xl font-semibold">Posição</th>
+                                        <th class="py-3 px-4 font-semibold">Room ID</th>
+                                        <th class="py-3 px-4 font-semibold">Título</th>
+                                        <th class="py-3 px-4 rounded-tr-xl font-semibold">Host ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    data.forEach((competitor, index) => {
+                        const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-indigo-50';
+                        tableHtml += `
+                            <tr class="${rowBg} border-b border-gray-200 last:border-b-0">
+                                <td class="py-3 px-4">${competitor.position}</td>
+                                <td class="py-3 px-4">${competitor.room_id}</td>
+                                <td class="py-3 px-4">${competitor.title}</td>
+                                <td class="py-3 px-4">${competitor.host_id}</td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHtml += `
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    rankingContainer.innerHTML = tableHtml;
+
+                } catch (err) {
+                    console.error('Erro inesperado:', err);
+                    rankingContainer.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                }
+            }
+
+            // Chama a função para buscar os dados quando o DOM estiver carregado
+            fetchRanking();
+        });
+    </script>
+</body>
+</html>

@@ -62,9 +62,10 @@
                 errorMessage.classList.add('hidden');
 
                 try {
+                    // Atualiza a query para incluir 'total_reviews' e 'score'
                     const { data, error } = await supabase
                         .from('competitors')
-                        .select('room_id, title, host_id, position')
+                        .select('room_id, title, host_id, position, total_reviews, score') // Alterado para 'total_reviews'
                         .order('position', { ascending: true });
 
                     if (error) {
@@ -88,7 +89,9 @@
                                         <th class="py-3 px-4 rounded-tl-xl font-semibold">Posição</th>
                                         <th class="py-3 px-4 font-semibold">Room ID</th>
                                         <th class="py-3 px-4 font-semibold">Título</th>
-                                        <th class="py-3 px-4 rounded-tr-xl font-semibold">Host ID</th>
+                                        <th class="py-3 px-4 font-semibold">Host ID</th>
+                                        <th class="py-3 px-4 font-semibold">Total de Avaliações</th> <!-- Cabeçalho alterado para 'Total de Avaliações' -->
+                                        <th class="py-3 px-4 rounded-tr-xl font-semibold">Pontuação</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -102,6 +105,8 @@
                                 <td class="py-3 px-4">${competitor.room_id}</td>
                                 <td class="py-3 px-4">${competitor.title}</td>
                                 <td class="py-3 px-4">${competitor.host_id}</td>
+                                <td class="py-3 px-4">${competitor.total_reviews !== null ? competitor.total_reviews : 'N/A'}</td> <!-- Exibe total_reviews -->
+                                <td class="py-3 px-4">${competitor.score !== null ? competitor.score.toFixed(2) : 'N/A'}</td>
                             </tr>
                         `;
                     });

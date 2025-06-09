@@ -26,6 +26,19 @@
     <div class="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6 sm:p-8 lg:p-10">
         <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-indigo-700">Ranking de Competidores</h1>
 
+        <!-- Botões de Ordenação -->
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button id="sort-position" class="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
+                Ordenar por Posição
+            </button>
+            <button id="sort-host" class="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
+                Ordenar por Host
+            </button>
+            <button id="sort-price" class="px-5 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
+                Ordenar por Preço
+            </button>
+        </div>
+
         <div id="ranking-container">
             <p class="text-center p-8 text-lg text-gray-700">Carregando dados do ranking...</p>
         </div>
@@ -54,7 +67,13 @@
             // Initialize the Supabase client
             const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            async function fetchRanking() {
+            // Estado de ordenação atual
+            let currentSort = {
+                column: 'position', // Coluna padrão para ordenar
+                ascending: true     // Direção padrão (ascendente)
+            };
+
+            async function fetchRanking(orderByColumn = currentSort.column, ascending = currentSort.ascending) {
                 const rankingContainer = document.getElementById('ranking-container');
                 const errorMessage = document.getElementById('error-message');
 
@@ -62,12 +81,12 @@
                 errorMessage.classList.add('hidden');
 
                 try {
-                    // Update the query to include 'total_reviews', 'score', 'price', 'host_link', and 'scrap_url'
-                    // and the host's URL and name, using the 'host' field from the 'competitors' table
+                    // Update the query to include necessary columns, filter out null hosts, and apply ordering
                     const { data, error } = await supabase
                         .from('competitors')
                         .select('room_id, title, host, position, total_reviews, score, price, host_link, scrap_url, host(url, name)')
-                        .order('position', { ascending: true });
+                        .not('host', 'is', null) // Filter: remove rows where 'host' is null
+                        .order(orderByColumn, { ascending: ascending });
 
                     if (error) {
                         console.error('Erro ao buscar dados:', error.message);
@@ -105,7 +124,13 @@
                         const hostName = competitor.host && competitor.host.name ? competitor.host.name : 'N/A'; // Host name
                         const price = competitor.price !== null ? `R$ ${competitor.price.toFixed(2)}` : 'N/A'; // Format price
                         const hostLink = competitor.host_link ? competitor.host_link : '#'; // Host link, fallback to '#'
-                        const scrapUrl = competitor.scrap_url ? competitor.scrap_url : '#'; // Scrap URL, fallback to '#'
+                        
+                        let scrapUrl = competitor.scrap_url ? competitor.scrap_url : '#'; // Scrap URL, fallback to '#'
+                        // Ensure scrapUrl starts with https://
+                        if (scrapUrl !== '#' && !scrapUrl.startsWith('https://') && !scrapUrl.startsWith('http://')) {
+                            scrapUrl = `https://${scrapUrl}`;
+                        }
+
 
                         // Combine score and total_reviews for display
                         const scoreDisplay = competitor.score !== null ? competitor.score.toFixed(2) : 'N/A';
@@ -151,7 +176,23 @@
                 }
             }
 
-            // Call the function to fetch data when the DOM is loaded
+            // Função para lidar com a ordenação
+            function handleSort(column) {
+                if (currentSort.column === column) {
+                    currentSort.ascending = !currentSort.ascending; // Alterna a direção se a mesma coluna for clicada
+                } else {
+                    currentSort.column = column;
+                    currentSort.ascending = true; // Define a nova coluna e padrão para ascendente
+                }
+                fetchRanking(); // Chama a função para buscar e reordenar os dados
+            }
+
+            // Adiciona event listeners aos botões de ordenação
+            document.getElementById('sort-position').addEventListener('click', () => handleSort('position'));
+            document.getElementById('sort-host').addEventListener('click', () => handleSort('host')); 
+            document.getElementById('sort-price').addEventListener('click', () => handleSort('price'));
+
+            // Chama a função para buscar os dados quando o DOM estiver carregado
             fetchRanking();
         });
     </script>

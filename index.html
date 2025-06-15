@@ -46,15 +46,16 @@
     </script>
 </head>
 <body class="font-inter bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-    <div class="max-w-4xl w-full bg-white shadow-lg rounded-xl p-6 sm:p-8 lg:p-10">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-indigo-700">Lista de Hospedagens Disponíveis em Taperapuã</h1>
+    <!-- Removido o fundo branco e as sombras do contêiner principal, além de ajustar o preenchimento -->
+    <div class="w-full">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-indigo-700 p-4">Lista de Hospedagens Disponíveis em Taperapuã</h1>
         <!-- Texto explicativo para a coluna Posição -->
-        <p class="text-center text-sm text-gray-600 mb-6">
+        <p class="text-center text-sm text-gray-600 mb-6 p-4">
             A coluna de Posição indica a ordem de exibição das hospedagens.
         </p>
 
         <!-- Navegação de Datas -->
-        <div class="flex items-center justify-center gap-4 mb-6">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 p-4">
             <button id="prev-day" class="px-3 py-1 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
                 &lt; Anterior
             </button>
@@ -62,9 +63,11 @@
             <button id="next-day" class="px-3 py-1 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
                 Próximo &gt;
             </button>
+            <!-- Adicionado o input de calendário -->
+            <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300 ease-in-out">
         </div>
 
-        <div id="ranking-container">
+        <div id="ranking-container" class="p-4">
             <p class="text-center p-8 text-lg text-gray-700">Carregando dados...</p>
         </div>
 
@@ -94,6 +97,9 @@
             let currentDate = new Date(); // Initialize with today's date
             currentDate.setDate(currentDate.getDate() + 1); // Set to tomorrow's date
 
+            // Get the date picker input element
+            const datePicker = document.getElementById('date-picker');
+
             // Helper function to format a Date object as DD/MM/YYYY for display
             function formatDateForDisplay(dateObj) {
                 const day = String(dateObj.getDate()).padStart(2, '0');
@@ -102,7 +108,7 @@
                 return `${day}/${month}/${year}`;
             }
 
-            // Helper function to format a Date object as YYYY-MM-DD for Supabase query
+            // Helper function to format a Date object as YYYY-MM-DD for Supabase query and date input value
             function formatDateForSupabase(dateObj) {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -119,16 +125,16 @@
                 rankingContainer.innerHTML = '<p class="text-center p-8 text-lg text-gray-700">Carregando dados...</p>';
                 errorMessage.classList.add('hidden');
                 dateDisplay.textContent = formatDateForDisplay(dateToFetch); // Update date display immediately
+                datePicker.value = formatDateForSupabase(dateToFetch); // Update the date picker value
 
                 try {
                     // Format the date for the Supabase query
                     const formattedDate = formatDateForSupabase(dateToFetch);
 
                     // Fetch data from Supabase, filtering by 'checkin' date directly in the query
-                    // Re-added 'scrap_url' to the select statement, but NOT 'room_id'
                     const { data, error } = await supabase
                         .from('frontend')
-                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url')
+                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url, tiny_description')
                         .eq('checkin', formattedDate) // Filter by exact checkin date
                         .order('position', { ascending: true }) // Always order by position
                         .limit(10); // Limit to a maximum of 10 results per date
@@ -157,6 +163,7 @@
             function renderTable(data) {
                 const rankingContainer = document.getElementById('ranking-container');
                 let tableHtml = `
+                    <!-- Mantido o arredondamento e sombra na tabela interna para melhor visualização -->
                     <div class="overflow-x-auto rounded-xl shadow-md">
                         <table class="w-full text-left border-separate border-spacing-0 rounded-xl overflow-hidden">
                             <thead class="bg-indigo-600 text-white text-sm uppercase">
@@ -164,6 +171,7 @@
                                     <th class="py-3 px-4 rounded-tl-xl font-semibold"></th> <!-- Removed "Posição" label -->
                                     <th class="py-3 px-4 font-semibold">Host</th>
                                     <th class="py-3 px-4 font-semibold">Título</th>
+                                    <th class="py-3 px-4 font-semibold">Descrição Curta</th> <!-- New column header -->
                                     <th class="py-3 px-4 font-semibold">Data</th> 
                                     <th class="py-3 px-4 text-right font-semibold">Preço</th>
                                     <th class="py-3 px-4 rounded-tr-xl font-semibold text-center">Link</th> <!-- Renamed column header to "Link" -->
@@ -180,11 +188,12 @@
                     const price = competitor.price !== null ? `R$ ${Math.round(competitor.price)}` : ''; 
                     const checkinDate = competitor.checkin ? formatDateForDisplay(new Date(competitor.checkin + 'T12:00:00')) : ''; 
                     const roomImage = (competitor.room_image_array && competitor.room_image_array.length > 0) 
-                                      ? competitor.room_image_array[0] 
-                                      : `https://placehold.co/50x50/cccccc/000000?text=No+Image`; 
+                                            ? competitor.room_image_array[0] 
+                                            : `https://placehold.co/50x50/cccccc/000000?text=No+Image`; 
                     
                     const scrapUrl = competitor.scrap_url ? competitor.scrap_url : '#'; // Use scrap_url
-                    
+                    const tinyDescription = competitor.tiny_description ? competitor.tiny_description : 'N/A'; // New: tiny_description
+
                     tableHtml += `
                         <tr class="${rowBg} border-b border-gray-200 last:border-b-0">
                             <td class="py-3 px-4">${competitor.position !== null ? competitor.position : ''}</td>
@@ -192,9 +201,9 @@
                                 ${hostImage ? `<img src="${hostImage}" alt="Host Image" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/40x40/cccccc/000000?text=Host';">` : ''}
                                 <!-- Tooltip for host name -->
                                 <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                              bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                              group-hover:opacity-100 transition-opacity duration-200 
-                                              whitespace-nowrap z-10">
+                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                            group-hover:opacity-100 transition-opacity duration-200 
+                                            whitespace-nowrap z-10">
                                     ${hostName}
                                 </span>
                             </td>
@@ -202,6 +211,7 @@
                                 ${roomImage ? `<a href="${roomImage}" target="_blank"><img src="${roomImage}" alt="Room Image" class="w-16 h-12 object-cover rounded-md shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/000000?text=No+Image';"></a>` : ''}
                                 <span class="flex-grow">${competitor.title !== null ? competitor.title : ''}</span>
                             </td>
+                            <td class="py-3 px-4 text-sm">${tinyDescription}</td> <!-- New column for tiny_description -->
                             <td class="py-3 px-4">${checkinDate}</td> 
                             <td class="py-3 px-4 text-right whitespace-nowrap">${price}</td>
                             <td class="py-3 px-4 text-center relative group">
@@ -211,9 +221,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                         <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                                      bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                                      group-hover:opacity-100 transition-opacity duration-200 
-                                                      whitespace-nowrap z-10">
+                                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                                            group-hover:opacity-100 transition-opacity duration-200 
+                                                            whitespace-nowrap z-10">
                                             Ver Detalhes
                                         </span>
                                     </a>
@@ -243,6 +253,13 @@
                 const newDate = new Date(currentDate);
                 newDate.setDate(newDate.getDate() + 1);
                 currentDate = newDate; // Update the global currentDate
+                fetchRankingsForDate(currentDate);
+            });
+
+            // Event listener for the date picker
+            datePicker.addEventListener('change', (event) => {
+                const selectedDateString = event.target.value; // YYYY-MM-DD
+                currentDate = new Date(selectedDateString + 'T12:00:00'); // Use 'T12:00:00' to avoid timezone issues
                 fetchRankingsForDate(currentDate);
             });
 

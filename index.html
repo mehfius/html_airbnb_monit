@@ -9,13 +9,13 @@
     <!-- Configuração do Tailwind para a fonte Inter -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-        /* Custom styles for rounded table corners */
+        /* Estilos personalizados para cantos arredondados da tabela */
         table {
             border-collapse: separate;
             border-spacing: 0;
         }
         th, td {
-            border-bottom: 1px solid #e2e8f0; /* light gray */
+            border-bottom: 1px solid #333; /* Cinza escuro para o modo monocromático */
         }
         tr:last-child td {
             border-bottom: none;
@@ -32,6 +32,9 @@
         tbody tr:last-child td:last-child {
             border-bottom-right-radius: 0.75rem; /* rounded-br-xl */
         }
+        html {
+            overflow-y: scroll;
+        }
     </style>
     <script>
         tailwind.config = {
@@ -45,70 +48,70 @@
         };
     </script>
 </head>
-<body class="font-inter bg-gray-100 text-gray-800 flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
-    <!-- Removido o fundo branco e as sombras do contêiner principal, além de ajustar o preenchimento -->
+<body class="font-inter bg-black text-sm text-white flex items-center justify-center min-h-screen p-4 sm:p-6 lg:p-8">
+    <!-- Removido o fundo branco e sombras do container principal, e ajustado o preenchimento -->
     <div class="w-full">
-        <h1 class="text-3xl sm:text-4xl font-bold text-center mb-6 text-indigo-700 p-4">Lista de Hospedagens Disponíveis em Taperapuã</h1>
+        <h1 class="text-2xl sm:text-3xl font-bold text-center mb-6 text-white p-4">Lista de Hospedagens Disponíveis em Taperapuã</h1>
         <!-- Texto explicativo para a coluna Posição -->
-        <p class="text-center text-sm text-gray-600 mb-6 p-4">
+        <p class="text-center text-xs text-gray-300 mb-6 p-4">
             A coluna de Posição indica a ordem de exibição das hospedagens.
         </p>
 
-        <!-- Navegação de Datas -->
+        <!-- Navegação de Data -->
         <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 p-4">
-            <button id="prev-day" class="px-3 py-1 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
+            <button id="prev-day" class="px-3 py-1 bg-gray-800 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
                 &lt; Anterior
             </button>
-            <span id="current-date-display" class="text-xl font-bold text-indigo-800"></span> <!-- Made font-bold for prominence -->
-            <button id="next-day" class="px-3 py-1 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
+            <span id="current-date-display" class="text-lg font-bold text-gray-200"></span> <!-- Fonte em negrito para destaque -->
+            <button id="next-day" class="px-3 py-1 bg-gray-800 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-300 ease-in-out">
                 Próximo &gt;
             </button>
-            <!-- Adicionado o input de calendário -->
-            <input type="date" id="date-picker" class="p-2 border border-gray-300 rounded-lg text-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-300 ease-in-out">
+            <!-- Adicionado input de calendário -->
+            <input type="date" id="date-picker" class="p-2 border border-gray-700 bg-gray-900 rounded-lg text-sm text-white focus:ring-2 focus:ring-gray-600 focus:border-gray-600 transition-all duration-300 ease-in-out">
         </div>
 
         <div id="ranking-container" class="p-4">
-            <p class="text-center p-8 text-lg text-gray-700">Carregando dados...</p>
+            <p class="text-center p-8 text-base text-gray-300">Carregando dados...</p>
         </div>
 
-        <div id="error-message" class="text-center p-8 text-lg text-red-600 hidden">
+        <div id="error-message" class="text-center p-8 text-base text-red-300 hidden">
             <p>Ocorreu um erro ao carregar os dados. Por favor, tente novamente mais tarde.</p>
         </div>
     </div>
 
     <!-- O script do Supabase agora é importado como um módulo abaixo -->
     <script type="module">
-        // Import createClient directly from the Supabase ES module
+        // Importa createClient diretamente do módulo ES do Supabase
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.50.0/+esm';
 
-        // Ensure the script runs only after the DOM is fully loaded
+        // Garante que o script seja executado somente após o DOM estar totalmente carregado
         document.addEventListener('DOMContentLoaded', async () => {
-            // Supabase configuration
+            // Configuração do Supabase
             const SUPABASE_URL = "https://xwejzglvqsiydycvivys.supabase.co";
             // POR FAVOR, SUBSTITUA ESTE VALOR PELA SUA CHAVE PÚBLICA (ANON) DO SUPABASE.
             // VOCÊ PODE ENCONTRÁ-LA NO SEU PAINEL DO SUPABASE EM "SETTINGS" -> "API".
             // NUNCA EXPONHA SUA CHAVE 'service_role' NO FRONTEND!
             const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh3ZWp6Z2x2cXNpeWR5Y3ZpdnlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDIyNDgzOTQsImV4cCI6MjA1NzgyNDM5NH0.32ClzsWEgc_XdqXD4d8i7_AO4SOIjKjzQCPb_SjJBoU"; 
 
-            // Initialize the Supabase client
+            // Inicializa o cliente Supabase
             const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            // Current date being displayed for filtering
-            let currentDate = new Date(); // Initialize with today's date
-            currentDate.setDate(currentDate.getDate() + 1); // Set to tomorrow's date
+            // Data atual sendo exibida para filtragem
+            let currentDate = new Date(); // Inicializa com a data de hoje
+            currentDate.setDate(currentDate.getDate() + 1); // Define para a data de amanhã
 
-            // Get the date picker input element
+            // Obtém o elemento input do seletor de data
             const datePicker = document.getElementById('date-picker');
 
-            // Helper function to format a Date object as DD/MM/YYYY for display
+            // Função auxiliar para formatar um objeto Date como DD/MM/YYYY para exibição
             function formatDateForDisplay(dateObj) {
                 const day = String(dateObj.getDate()).padStart(2, '0');
-                const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0'); // Meses são indexados a partir de 0
                 const year = dateObj.getFullYear();
                 return `${day}/${month}/${year}`;
             }
 
-            // Helper function to format a Date object as YYYY-MM-DD for Supabase query and date input value
+            // Função auxiliar para formatar um objeto Date como AAAA-MM-DD para consulta Supabase e valor do input de data
             function formatDateForSupabase(dateObj) {
                 const year = dateObj.getFullYear();
                 const month = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -116,28 +119,37 @@
                 return `${year}-${month}-${day}`;
             }
 
-            // Function to fetch and render ranking data for a specific date
+            // Função para extrair o ID do quarto da scrap_url (ainda usado para a coluna "Link" original)
+            const getRoomIdFromUrl = (url) => {
+                if (!url || typeof url !== 'string') {
+                    return null;
+                }
+                const match = url.match(/\/rooms\/(\d+)/);
+                return match ? match[1] : null;
+            };
+
+            // Função para buscar e renderizar dados de ranking para uma data específica
             async function fetchRankingsForDate(dateToFetch) {
                 const rankingContainer = document.getElementById('ranking-container');
                 const errorMessage = document.getElementById('error-message');
                 const dateDisplay = document.getElementById('current-date-display');
 
-                rankingContainer.innerHTML = '<p class="text-center p-8 text-lg text-gray-700">Carregando dados...</p>';
+                rankingContainer.innerHTML = '<p class="text-center p-8 text-base text-gray-300">Carregando dados...</p>';
                 errorMessage.classList.add('hidden');
-                dateDisplay.textContent = formatDateForDisplay(dateToFetch); // Update date display immediately
-                datePicker.value = formatDateForSupabase(dateToFetch); // Update the date picker value
+                dateDisplay.textContent = formatDateForDisplay(dateToFetch); // Atualiza a exibição da data imediatamente
+                datePicker.value = formatDateForSupabase(dateToFetch); // Atualiza o valor do seletor de data
 
                 try {
-                    // Format the date for the Supabase query
+                    // Formata a data para a consulta Supabase
                     const formattedDate = formatDateForSupabase(dateToFetch);
 
-                    // Fetch data from Supabase, filtering by 'checkin' date directly in the query
+                    // Busca dados do Supabase, agora incluindo os campos 'room' e 'avaliables'
                     const { data, error } = await supabase
                         .from('frontend')
-                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url, tiny_description')
-                        .eq('checkin', formattedDate) // Filter by exact checkin date
-                        .order('position', { ascending: true }) // Always order by position
-                        .limit(10); // Limit to a maximum of 10 results per date
+                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url, tiny_description, room, avaliables') // Adicionado 'avaliables'
+                        .eq('checkin', formattedDate) // Filtra pela data exata de check-in
+                        .order('position', { ascending: true }) // Sempre ordena por posição
+            
 
                     if (error) {
                         console.error('Erro ao buscar dados:', error.message);
@@ -147,11 +159,11 @@
                     }
 
                     if (!data || data.length === 0) {
-                        rankingContainer.innerHTML = `<p class="text-center p-8 text-lg text-gray-700">Nenhuma hospedagem encontrada para a data: <strong>${formatDateForDisplay(dateToFetch)}</strong>. Tente navegar para outras datas.</p>`;
+                        rankingContainer.innerHTML = `<p class="text-center p-8 text-base text-gray-300">Nenhuma hospedagem encontrada para a data: <strong>${formatDateForDisplay(dateToFetch)}</strong>. Tente navegar para outras datas.</p>`;
                         return;
                     }
 
-                    renderTable(data); // Render the table with the fetched data
+                    renderTable(data); // Renderiza a tabela com os dados buscados
                 } catch (err) {
                     console.error('Erro inesperado:', err);
                     rankingContainer.classList.add('hidden');
@@ -159,51 +171,67 @@
                 }
             }
 
-            // Function to render the HTML table
+            // Função para renderizar a tabela HTML
             function renderTable(data) {
                 const rankingContainer = document.getElementById('ranking-container');
                 let tableHtml = `
                     <!-- Mantido o arredondamento e sombra na tabela interna para melhor visualização -->
                     <div class="overflow-x-auto rounded-xl shadow-md">
                         <table class="w-full text-left border-separate border-spacing-0 rounded-xl overflow-hidden">
-                            <thead class="bg-indigo-600 text-white text-sm uppercase">
+                            <thead class="bg-gray-800 text-white text-xs uppercase">
                                 <tr>
-                                    <th class="py-3 px-4 rounded-tl-xl font-semibold"></th> <!-- Removed "Posição" label -->
+                                    <th class="py-3 px-4 rounded-tl-xl font-semibold">Posição / Disponíveis</th> <!-- Título da coluna atualizado -->
                                     <th class="py-3 px-4 font-semibold">Host</th>
                                     <th class="py-3 px-4 font-semibold">Título</th>
-                                    <th class="py-3 px-4 font-semibold">Descrição Curta</th> <!-- New column header -->
-                                    <th class="py-3 px-4 font-semibold">Data</th> 
+                                    <th class="py-3 px-4 font-semibold">Descrição Curta</th>
                                     <th class="py-3 px-4 text-right font-semibold">Preço</th>
-                                    <th class="py-3 px-4 rounded-tr-xl font-semibold text-center">Link</th> <!-- Renamed column header to "Link" -->
+                                    <th class="py-3 px-4 font-semibold text-center"></th> <!-- Título da coluna Link removido -->
+                                    <th class="py-3 px-4 rounded-tr-xl font-semibold text-center"></th> <!-- Título da coluna Room removido -->
                                 </tr>
                             </thead>
                             <tbody>
                 `;
 
                 data.forEach((competitor, index) => {
-                    const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-indigo-50';
+                    const rowBg = index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-800';
                     
                     const hostImage = competitor.host_image ? competitor.host_image : '';
                     const hostName = competitor.name ? competitor.name : 'Nome não disponível';
                     const price = competitor.price !== null ? `R$ ${Math.round(competitor.price)}` : ''; 
-                    const checkinDate = competitor.checkin ? formatDateForDisplay(new Date(competitor.checkin + 'T12:00:00')) : ''; 
                     const roomImage = (competitor.room_image_array && competitor.room_image_array.length > 0) 
                                             ? competitor.room_image_array[0] 
                                             : `https://placehold.co/50x50/cccccc/000000?text=No+Image`; 
                     
-                    const scrapUrl = competitor.scrap_url ? competitor.scrap_url : '#'; // Use scrap_url
-                    const tinyDescription = competitor.tiny_description ? competitor.tiny_description : 'N/A'; // New: tiny_description
+                    const scrapUrl = competitor.scrap_url ? competitor.scrap_url : ''; 
+                    const tinyDescription = competitor.tiny_description ? competitor.tiny_description : 'N/A';
+                    // Converte explicitamente competitor.room para string para evitar problemas de precisão
+                    const roomIDfromDB = competitor.room ? String(competitor.room) : 'N/A'; 
+                    const avaliables = competitor.avaliables !== null ? competitor.avaliables : 'N/A'; // Obtém o valor de avaliables
 
+                    // Lógica para construir o link dinâmico do Airbnb usando roomIDfromDB
+                    let airbnbLink = '#';
+                    if (roomIDfromDB !== 'N/A' && competitor.checkin) {
+                        const checkinDateObjForLink = new Date(competitor.checkin + 'T12:00:00');
+                        const checkoutDateObjForLink = new Date(checkinDateObjForLink);
+                        checkoutDateObjForLink.setDate(checkoutDateObjForLink.getDate() + 3); // Check-out é check-in + 3 dias
+
+                        const formattedCheckinForLink = formatDateForSupabase(checkinDateObjForLink);
+                        const formattedCheckoutForLink = formatDateForSupabase(checkoutDateObjForLink);
+
+                        // Usa roomIDfromDB (competitor.room) para o link do Airbnb
+                        airbnbLink = `https://www.airbnb.com.br/rooms/${roomIDfromDB}?adults=4&check_in=${formattedCheckinForLink}&check_out=${formattedCheckoutForLink}`;
+                    }
+                    
                     tableHtml += `
-                        <tr class="${rowBg} border-b border-gray-200 last:border-b-0">
-                            <td class="py-3 px-4">${competitor.position !== null ? competitor.position : ''}</td>
+                        <tr class="${rowBg} border-b border-gray-600 last:border-b-0">
+                            <td class="py-3 px-4">${competitor.position !== null ? competitor.position : ''} / ${avaliables}</td> <!-- Exibe Posição / Disponíveis -->
                             <td class="py-3 px-4 relative group">
                                 ${hostImage ? `<img src="${hostImage}" alt="Host Image" class="w-10 h-10 rounded-full object-cover" onerror="this.onerror=null;this.src='https://placehold.co/40x40/cccccc/000000?text=Host';">` : ''}
-                                <!-- Tooltip for host name -->
+                                <!-- Tooltip para o nome do host -->
                                 <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                            group-hover:opacity-100 transition-opacity duration-200 
-                                            whitespace-nowrap z-10">
+                                        bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                        group-hover:opacity-100 transition-opacity duration-200 
+                                        whitespace-nowrap z-10">
                                     ${hostName}
                                 </span>
                             </td>
@@ -211,23 +239,38 @@
                                 ${roomImage ? `<a href="${roomImage}" target="_blank"><img src="${roomImage}" alt="Room Image" class="w-16 h-12 object-cover rounded-md shadow-sm" onerror="this.onerror=null;this.src='https://placehold.co/50x50/cccccc/000000?text=No+Image';"></a>` : ''}
                                 <span class="flex-grow">${competitor.title !== null ? competitor.title : ''}</span>
                             </td>
-                            <td class="py-3 px-4 text-sm">${tinyDescription}</td> <!-- New column for tiny_description -->
-                            <td class="py-3 px-4">${checkinDate}</td> 
+                            <td class="py-3 px-4 text-xs">${tinyDescription}</td>
                             <td class="py-3 px-4 text-right whitespace-nowrap">${price}</td>
                             <td class="py-3 px-4 text-center relative group">
                                 ${scrapUrl !== '#' ? `
-                                    <a href="${scrapUrl}" target="_blank" class="inline-block text-indigo-600 hover:text-indigo-800">
+                                    <a href="${scrapUrl}" target="_blank" class="inline-block text-gray-400 hover:text-gray-500">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                         <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                                            group-hover:opacity-100 transition-opacity duration-200 
-                                                            whitespace-nowrap z-10">
+                                                                bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                                                group-hover:opacity-100 transition-opacity duration-200 
+                                                                whitespace-nowrap z-10">
                                             Ver Detalhes
                                         </span>
                                     </a>
-                                ` : ''}
+                                ` : 'N/A'}
+                            </td>
+                            <td class="py-3 px-4 text-center relative group">
+                                ${airbnbLink !== '#' ? `
+                                    <a href="${airbnbLink}" target="_blank" class="inline-block text-gray-400 hover:text-gray-500">
+                                        <!-- Ícone de casa para o Link do Airbnb -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                                        </svg>
+                                        <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
+                                                                bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                                                group-hover:opacity-100 transition-opacity duration-200 
+                                                                whitespace-nowrap z-10">
+                                            Ir para o Room
+                                        </span>
+                                    </a>
+                                ` : 'N/A'}
                             </td>
                         </tr>
                     `;
@@ -241,29 +284,29 @@
                 rankingContainer.innerHTML = tableHtml;
             }
 
-            // Event listeners for date navigation
+            // Listeners de eventos para navegação de data
             document.getElementById('prev-day').addEventListener('click', () => {
                 const newDate = new Date(currentDate);
                 newDate.setDate(newDate.getDate() - 1);
-                currentDate = newDate; // Update the global currentDate
+                currentDate = newDate; // Atualiza a currentDate global
                 fetchRankingsForDate(currentDate);
             });
 
             document.getElementById('next-day').addEventListener('click', () => {
                 const newDate = new Date(currentDate);
                 newDate.setDate(newDate.getDate() + 1);
-                currentDate = newDate; // Update the global currentDate
+                currentDate = newDate; // Atualiza a currentDate global
                 fetchRankingsForDate(currentDate);
             });
 
-            // Event listener for the date picker
+            // Listener de evento para o seletor de data
             datePicker.addEventListener('change', (event) => {
-                const selectedDateString = event.target.value; // YYYY-MM-DD
-                currentDate = new Date(selectedDateString + 'T12:00:00'); // Use 'T12:00:00' to avoid timezone issues
+                const selectedDateString = event.target.value; // AAAA-MM-DD
+                currentDate = new Date(selectedDateString + 'T12:00:00'); // Usa 'T12:00:00' para evitar problemas de fuso horário
                 fetchRankingsForDate(currentDate);
             });
 
-            // Initial fetch of data for the starting date (tomorrow)
+            // Busca inicial dos dados para a data de início (amanhã)
             fetchRankingsForDate(currentDate);
         });
     </script>

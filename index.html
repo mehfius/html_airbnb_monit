@@ -143,13 +143,13 @@
                     // Formata a data para a consulta Supabase
                     const formattedDate = formatDateForSupabase(dateToFetch);
 
-                    // Busca dados do Supabase, agora incluindo os campos 'room' e 'avaliables'
+                    // Busca dados do Supabase, agora incluindo os campos 'room', 'avaliables', 'favorite' e 'superhost'
                     const { data, error } = await supabase
                         .from('frontend')
-                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url, tiny_description, room, avaliables') // Adicionado 'avaliables'
+                        .select('name, title, price, position, room_image_array, host_image, checkin, scrap_url, tiny_description, room, avaliables, favorite, superhost') // **Corrigido para 'favorite' (singular)**
                         .eq('checkin', formattedDate) // Filtra pela data exata de check-in
                         .order('position', { ascending: true }) // Sempre ordena por posição
-            
+                    
 
                     if (error) {
                         console.error('Erro ao buscar dados:', error.message);
@@ -185,8 +185,10 @@
                                     <th class="py-3 px-4 font-semibold">Título</th>
                                     <th class="py-3 px-4 font-semibold">Descrição Curta</th>
                                     <th class="py-3 px-4 text-right font-semibold">Preço</th>
-                                    <th class="py-3 px-4 font-semibold text-center"></th> <!-- Título da coluna Link removido -->
-                                    <th class="py-3 px-4 rounded-tr-xl font-semibold text-center"></th> <!-- Título da coluna Room removido -->
+                                    <th class="py-3 px-4 font-semibold text-center"></th> <!-- Coluna para o ícone de link -->
+                                    <th class="py-3 px-4 font-semibold text-center"></th> <!-- Coluna para o ícone do Airbnb -->
+                                    <th class="py-3 px-4 font-semibold text-center"></th> <!-- Coluna para favorito -->
+                                    <th class="py-3 px-4 rounded-tr-xl font-semibold text-center"></th> <!-- Coluna para superhost -->
                                 </tr>
                             </thead>
                             <tbody>
@@ -207,6 +209,8 @@
                     // Converte explicitamente competitor.room para string para evitar problemas de precisão
                     const roomIDfromDB = competitor.room ? String(competitor.room) : 'N/A'; 
                     const avaliables = competitor.avaliables !== null ? competitor.avaliables : 'N/A'; // Obtém o valor de avaliables
+                    const isFavorite = competitor.favorite; // **Usando o campo 'favorite' (singular)**
+                    const isSuperhost = competitor.superhost; 
 
                     // Lógica para construir o link dinâmico do Airbnb usando roomIDfromDB
                     let airbnbLink = '#';
@@ -248,9 +252,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                         </svg>
                                         <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                                                bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                                                group-hover:opacity-100 transition-opacity duration-200 
-                                                                whitespace-nowrap z-10">
+                                                        bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                                        group-hover:opacity-100 transition-opacity duration-200 
+                                                        whitespace-nowrap z-10">
                                             Ver Detalhes
                                         </span>
                                     </a>
@@ -264,13 +268,41 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2 2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                                         </svg>
                                         <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
-                                                                bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
-                                                                group-hover:opacity-100 transition-opacity duration-200 
-                                                                whitespace-nowrap z-10">
+                                                        bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                                        group-hover:opacity-100 transition-opacity duration-200 
+                                                        whitespace-nowrap z-10">
                                             Ir para o Room
                                         </span>
                                     </a>
                                 ` : 'N/A'}
+                            </td>
+                            <!-- Nova coluna para FAVORITE -->
+                            <td class="py-3 px-4 text-center relative group">
+                                ${isFavorite ? `
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto text-red-500" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
+                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                            group-hover:opacity-100 transition-opacity duration-200 
+                                            whitespace-nowrap z-10">
+                                        Favorito
+                                    </span>
+                                ` : ''}
+                            </td>
+                            <!-- Nova coluna para SUPERHOST -->
+                            <td class="py-3 px-4 text-center relative group">
+                                ${isSuperhost ? `
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mx-auto text-yellow-400" fill="currentColor" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674h4.915c.95 0 1.341 1.258.591 1.944l-3.96 2.882 1.519 4.674c.3.921-.755 1.688-1.519 1.144L12 16.764l-3.96 2.882c-.764.544-1.819-.115-1.519-1.144l1.519-4.674-3.96-2.882c-.75-.686-.36-1.944.59-1.944h4.915l1.519-4.674z" />
+                                    </svg>
+                                    <span class="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 
+                                            bg-gray-800 text-white text-xs p-1 rounded-md opacity-0 
+                                            group-hover:opacity-100 transition-opacity duration-200 
+                                            whitespace-nowrap z-10">
+                                        Superhost
+                                    </span>
+                                ` : ''}
                             </td>
                         </tr>
                     `;
